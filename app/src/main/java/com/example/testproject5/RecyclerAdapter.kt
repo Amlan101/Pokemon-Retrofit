@@ -44,5 +44,4 @@ class RecyclerAdapter(private var pokemonList: List<Pokemon>, private var showHe
         this.showHeight = showHeight
         notifyDataSetChanged()
     }
-
 }

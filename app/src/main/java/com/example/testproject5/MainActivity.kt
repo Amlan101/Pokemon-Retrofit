@@ -3,6 +3,7 @@ package com.example.testproject5
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,10 +16,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: RecyclerAdapter
     private var showHeight: Boolean = false
+    private lateinit var searchView: SearchView
+    val pokemonList = mutableListOf<Pokemon>()
 
     private fun fetchPokemonData() {
         val service = RetrofitClient.pokemonService
-        val pokemonList = mutableListOf<Pokemon>()
+
         for (i in 1..50) {
             service.getPokemon(i.toString()).enqueue(object : Callback<Pokemon> {
             override fun onResponse(call: Call<Pokemon>, response: Response<Pokemon>) {
@@ -49,11 +52,31 @@ class MainActivity : AppCompatActivity() {
         adapter = RecyclerAdapter(emptyList(), showHeight)
         recyclerView.adapter = adapter
 
+        searchView = findViewById(R.id.searchView)
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                searchView.clearFocus()
+                if (query != null && query.isNotEmpty()) {
+                    val filteredList = pokemonList.filter { it.name.contains(query, true) }
+                    adapter.updatePokemonList(filteredList)
+                } else {
+                    adapter.updatePokemonList(pokemonList)
+                }
+                return false
+            }
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val filteredList = pokemonList.filter { it.name.contains(newText.orEmpty(), true) }
+                adapter.updatePokemonList(filteredList)
+                return true
+            }
+        })
+
         val heightSwitch: SwitchCompat = findViewById(R.id.switch1)
         heightSwitch.setOnCheckedChangeListener { _, isChecked ->
             showHeight = isChecked
             adapter.setShowHeight(showHeight)
         }
         fetchPokemonData()
+
     }
 }
